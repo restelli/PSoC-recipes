@@ -1,0 +1,36 @@
+#!/usr/bin/env expect
+
+
+set timeout -1
+set command [lindex $argv 0]
+set destination [lindex $argv 1]
+
+set force_conservative 0  ;# set to 1 to force conservative mode even if
+			  ;# script wasn't run conservatively originally
+if {$force_conservative} {
+	set send_slow {1 .1}
+	proc send {ignore arg} {
+		sleep .1
+		exp_send -s -- $arg
+	}
+}
+
+set timeout -1
+spawn $command -d $destination
+match_max 100000
+expect "Press Enter to display the license agreements*"
+send -- "\r"
+expect "*END USER LICENSE AGREEMENT FOR PETALINUX TOOLS*"
+send -- "q"
+expect "*>*"
+send -- "y\r"
+expect "*Terms and Conditions*"
+send -- "q"
+expect "*>*"
+send -- "y\r"
+expect "*Please note that by listing certain items in this Part Three*"
+send -- "q"
+expect "*>*"
+send -- "y\r"
+expect eof
+exit
