@@ -1,166 +1,25 @@
-# Instructions to build the image
+# PSoC recipes
 
-<font color=#ff0000 size=5> ATTENTION!!!! THIS INSTRUCTIONS CONTAINS A DEAD END APPROACH TO BUILD IMAGES. IT IS PRESERVED IN CASE THE AUTHOR WANT TO PICK UP THIS APPROACH IN THE FUTURE HOWEVER MOST OF THE RECIPES HERE WILL NOT WORK</font>
-
-
-
-
-The goal of this repository is to facilitate the automatic generation of custom PYNQ images for different Xilinx platforms that are not generally readily available. This is done in two steps. The first step is to produce a Docker image with Vivado, Petalinux and all the software requisites for PYNQ. The second step is to run a Docker container that will produce the required image (with minimal interaction from the user).
-At first we will rely on existing recipes, but over time we will build our own configuration files and we will cover more and more architectures.
+The goal of this repository is to facilitate the automatic generation of custom Linux PSoC images for different hardware platforms that are not generally readily available.
 At the moment the following architectures are targeted:
 
-| Architecture      | Pynq Version | Vitis version | Petalinux Version | Linux Version |
-| ----------------- | ------------ | ------------- | ----------------- |
+| Architecture | Pynq Version | Vitis version | Petalinux Version | Linux Version |
+| ----------------- | ------------ | ------------- | ----------------- |----------- |
 | Microzed 7020 | 2.6.0 | 2021.1 | 2021.1 | 18.04 |
-| Microzed 7010   | 2.6.0 | 2021.1 | 2021.1 | 18.04 |   
+| Microzed 7010   | 2.6.0 | 2021.1 | 2021.1 | 18.04 |
+| Kria SK-KR260-G |?|?|?|?|
 
 Additional architectures we are planning to add:
 
-| Architecture      | Pynq Version | Vitis version | Petalinux Version |
+| Architecture      | Pynq Version | Vitis version | Petalinux Version | Linux version |
 | ----------------- | ------------ | ------------- | ----------------- |
 | Red Pitaya 125-14 | 2.6.0 | 2021.1 | 2021.1 | 18.04 |
 | ADALM Pluto   | 2.6.0 | 2021.1 | 2021.1 | 18.04 |
 
-## Phase 1: Creating the Docker container
+### Kria SK-KR260-G with the pre-made Linux distribution
+To develop with *Kria SK-KR260-G* one has simply to follow the [getting started Instructions](https://www.xilinx.com/products/som/kria/kr260-robotics-starter-kit/kr260-getting-started/getting-started.html)
 
-Download the following files:
-
-[Xilinx_Unified_2020.1_0602_1208.tar.gz](https://www.xilinx.com/member/forms/download/xef.html?filename=Xilinx_Unified_2020.1_0602_1208.tar.gz)
-
-[petalinux-v2020.1-final-installer.run](https://www.xilinx.com/member/forms/download/xef.html?filename=petalinux-v2020.1-final-installer.run)
-
-
-Place the downloaded files in the folder [./downloads](./downloads).
-It is very important that the name of the files is not changed.
-
-At this point everything is ready for the automatic generation of a Docker container that can be used to develop with Xilinx© tools.
-
-Before running the container the user must agree to Xilinx© licenses as explained in [Xilinx© instructions for batch installation and licensing for Vivado](https://docs.xilinx.com/v/u/2020.1-English/ug973-vivado-release-notes-install-license#page=51#page=51 and for Petalinux one must agree to the licensing terms on the files `$PETALINUX/etc/license/petalinux_EULA.txt` EULA that specifies in detail the rights and restrictions that apply to PetaLinux, and the file `$PETALINUX/etc/license/Third_Party_Software_End_User_License_Agree
-ment.txt` that is the third party license agreement details the licenses of the distributable and non-distributable components in PetaLinux tools.
-
-When this is sorted out run the command:
-```
-docker build -t pynq_image .
-```
-
-## Phase 2: generating pynq images
-
-At this point it is possible to generate the Zynq images.
-We will need to use the Docker image to compile PYNQ boards.
-first go to this very repository main folder, then run:
-
-```
-docker run -it \
---mount type=bind,source="$(pwd)",target=/home/pynq/shared \
---rm \
---name pynq_test \
---net=host \
-pynq_image
-
-```
-That will log to a container that will map the current folder to `~/shared`.
-The container will run as a passwordless sudo user called *pynq*.
-
-### Microzed
-
-To compile the Microzed image we will use [FredKellerman](https://github.com/FredKellerman/Microzed-PYNQ) recipe.
-
-From within the Docker container to generate an image for the Microzed-7020 we need to run:
-
-```
-source /tools/Xilinx/Vitis/2020.1/settings64.sh
-source /home/pynq/petalinux/settings.sh
-petalinux-util --webtalk off
-sudo rm /usr/bin/qemu-arm-static
-sudo ln -s /opt/qemu/bin/qemu-arm-static /usr/bin/qemu-arm-static
-sudo ln -s /opt/crosstool-ng/bin/ct-ng /usr/bin/ct-ng
-sudo ln -s /usr/bin/python3 /usr/bin/python
-sudo apt-get install -y locales
-sudo locale-gen en_US.UTF-8
-export LC_ALL="C"
-sudo apt install cpio
-
-
-cd Microzed-PYNQ
-./buildfast.sh
-```
-The project will fail!
-To fix the issue it will be necessary to run:
-
-```
-sudo apt install vim
-vim PYNQ-git/sdbuild/Makefile
-```
-
-Then change QEMU_VERSION to 5.2.0
-
-
-```
-./buildfast.sh
-```
-
-And go for a walk.
-
-```
-mv microzed-x-x.x.x.img ~/shared
-```
-
-
-```
-git clone https://github.com/Xilinx/PYNQ.git
-cd PYNQ
-git checkout tags/v2.6.0
-vagrant up bionic
-```
-This will bring up and provision a virtual machine. After that a reboot will be necessary:
-
-```
-vagrant halt bionic
-vagrant up bionic
-```
-
-Now either login in the graphical interface of the virtual machine and open a terminal or (more conveniently) open a ssh connection using the command:
-
-```
-vagrant ssh bionic
-```
-
-Run the following commands to install Vivado and the Microzed-PYNQ package:
-
-```
-sudo /pynq/Xilinx_Unified_2020.1_0602_1208/xsetup --agree 3rdPartyEULA,WebTalkTerms,XilinxEULA --batch Install --config /pynq/vitis.cfg
-/pynq/petalinux-v2020.1-final-installer.run --skip_license -d /workspace/petalinux
-cd /workspace
-git clone https://github.com/FredKellerman/Microzed-PYNQ.git
-cd Microzed-PYNQ
-git checkout fb4d7b3b58f5a3e3b70b7c91142ece0f2e56f73c
-```
-
-Now it is possible to turn off the virtual machine with `vagrant halt bionic`  that will be ready for development invoking `vagrant up bionic`.
-
-
-To create an image for Zynq7020 the following commands are required.
-
-```
-cd /workspace/Microzed-PYNQ
-source /workspace/tools/Xilinx/Vivado/2020.1/settings64.sh
-source /workspace/petalinux/settings.sh
-petalinux-util --webtalk off
-./buildfast.sh
-```
-
-
-If we need to generate for the 7010 we need to edit buildfast.sh first
-
-To exit from the container simply run the command `exit`.
-The image file will be on this repository main folder
-
-
-
-### Kria
-Followed the [getting started Instructions](https://www.xilinx.com/products/som/kria/kr260-robotics-starter-kit/kr260-getting-started/getting-started.html)
-
-To ensure connectivity while using the UART terminal I did the following:
+To ensure connectivity while using the UART terminal this is a list of commands that might help with troubleshooting:
 
 ```
 sudo ifconfig eth0 192.168.0.<local>
@@ -169,6 +28,99 @@ echo "nameserver 8.8.8.8" | sudo tee /etc/resolv.conf
 echo vim /etc/hosts
 ```
 and add `192.168.0.<local> kria`
+
+For boards other than *Kria SK-KR260-G* the procedure is more involved and requires the creation of a virtual machine.
+
+## Phase 1: Creating Vagrant virtual machine
+
+Exit from the folder of this project and run the following code:
+
+```
+git clone https://github.com/Xilinx/PYNQ.git
+cd PYNQ
+git checkout tags/v2.6.0
+```
+
+Download the following files:
+
+[Xilinx_Unified_2020.1_0602_1208.tar.gz](https://www.xilinx.com/member/forms/download/xef.html?filename=Xilinx_Unified_2020.1_0602_1208.tar.gz)
+
+[petalinux-v2020.1-final-installer.run](https://www.xilinx.com/member/forms/download/xef.html?filename=petalinux-v2020.1-final-installer.run)
+
+[vitis.cfg](https://raw.githubusercontent.com/restelli/PSoC-recipes/main/cfg/vitis.cfg?token=GHSAT0AAAAAABX6ZFYIUFCURHBW3R2XVK2SYZN7W5A)
+
+
+Place the downloaded files in the folder PYNQ:
+It is very important that the name of the files is not changed.
+
+Then it is possibile to create the virtual machine to create PYNQ images.
+From within PYNQ folder run:
+
+```
+vagrant up bionic
+```
+
+This will bring up and provision a virtual machine. After that a reboot will be necessary:
+
+```
+vagrant halt bionic
+vagrant up bionic
+```
+
+At this point everything is ready for the installation of Xilinx© tools.
+
+Before installing the user must agree to Xilinx© licenses as explained in [Xilinx© instructions for batch installation and licensing for Vivado](https://docs.xilinx.com/v/u/2020.1-English/ug973-vivado-release-notes-install-license#page=51#page=51) while for Petalinux one must agree to the licensing terms on the files `$PETALINUX/etc/license/petalinux_EULA.txt` EULA that specifies in detail the rights and restrictions that apply to PetaLinux, and the file `$PETALINUX/etc/license/Third_Party_Software_End_User_License_Agree
+ment.txt` that is the third party license agreement that details the licenses of the distributable and non-distributable components in PetaLinux tools.
+
+
+Now either login in the graphical interface of the virtual machine and open a terminal or (more conveniently) open a ssh connection using the command:
+
+```
+vagrant ssh bionic
+```
+Run the following commands to install Vivado as well as a few remaining dependencies that are not checked during the VM provisioning:
+
+```
+sudo apt update
+sudo apt install -y xvfb
+sudo /pynq/Xilinx_Unified_2020.1_0602_1208/xsetup --agree 3rdPartyEULA,WebTalkTerms,XilinxEULA --batch Install --config /pynq/vitis.cfg
+/pynq/petalinux-v2020.1-final-installer.run --skip_license -d /workspace/petalinux
+```
+
+Now it is possible to turn off the virtual machine with `vagrant halt bionic`  that will be ready for development invoking `vagrant up bionic`.
+
+
+## Phase 2: generating PYNQ images
+
+
+
+### Microzed
+
+To compile the Microzed image we will use [FredKellerman](https://github.com/FredKellerman/Microzed-PYNQ) recipe.
+
+from within the vagrant machine [FredKellerman](https://github.com/FredKellerman/Microzed-PYNQ) recipe can be installed with the commands
+
+```
+cd /workspace
+git clone https://github.com/FredKellerman/Microzed-PYNQ.git
+cd Microzed-PYNQ
+git checkout fb4d7b3b58f5a3e3b70b7c91142ece0f2e56f73c
+```
+
+To create an image for Zynq7020 the following commands are required.
+
+```
+cd /workspace/Microzed-PYNQ
+export PACKAGE_FEED_URIS="http://petalinux.xilinx.com/sswreleases/rel-v2021.2/generic-updates http://petalinux.xilinx.com/sswreleases/rel-v2021.2/generic"
+export PACKAGE_FEED_BASE_PATHS="rpm"
+source /workspace/tools/Xilinx/Vivado/2020.1/settings64.sh
+source /workspace/petalinux/settings.sh
+petalinux-util --webtalk off
+./buildfast.sh
+```
+
+If we need to generate the image for the Microzed 7010 we need to edit `buildfast.sh` first and set the target to 7010 instead of 7020
+
 
 
 ## Notes:
