@@ -3,6 +3,7 @@
 The goal of this repository is to facilitate the automatic generation of custom Linux PSoC images for different hardware platforms that are not generally readily available.
 At the moment the following architectures are targeted:
 
+
 | Architecture | Pynq Version | Vitis version | Petalinux Version | Linux Version |
 | ----------------- | ------------ | ------------- | ----------------- |----------- |
 | Microzed 7020 | 2.6.0 | 2021.1 | 2021.1 | 18.04 |
@@ -12,7 +13,7 @@ At the moment the following architectures are targeted:
 Additional architectures we are planning to add:
 
 | Architecture      | Pynq Version | Vitis version | Petalinux Version | Linux version |
-| ----------------- | ------------ | ------------- | ----------------- |
+| ----------------- | ------------ | ------------- | ----------------- |---------------|
 | Red Pitaya 125-14 | 2.6.0 | 2021.1 | 2021.1 | 18.04 |
 | ADALM Pluto   | 2.6.0 | 2021.1 | 2021.1 | 18.04 |
 
