@@ -9,12 +9,12 @@ At the moment the following architectures are targeted:
 | Microzed 7020 | 2.6.0 | 2021.1 | 2021.1 | 18.04 |
 | Microzed 7010   | 2.6.0 | 2021.1 | 2021.1 | 18.04 |
 | Kria SK-KR260-G |?|?|?|?|
+| Red Pitaya 125-14 | 2.6.0 | 2021.1 | 2021.1 | 18.04 |
 
 Additional architectures we are planning to add:
 
 | Architecture      | Pynq Version | Vitis version | Petalinux Version | Linux version |
 | ----------------- | ------------ | ------------- | ----------------- |---------------|
-| Red Pitaya 125-14 | 2.6.0 | 2021.1 | 2021.1 | 18.04 |
 | ADALM Pluto   | 2.6.0 | 2021.1 | 2021.1 | 18.04 |
 
 ### Kria SK-KR260-G with the pre-made Linux distribution
@@ -32,6 +32,42 @@ and add `192.168.0.<local> kria`
 
 For boards other than *Kria SK-KR260-G* the procedure is more involved and requires the creation of a virtual machine.
 
+### Red Pitaya with the pre-compiled distribution
+
+At the moment we rely on [https://github.com/dspsandbox/Pynq-Redpitaya-125](https://github.com/dspsandbox/Pynq-Redpitaya-125)
+A pre-compiled image is available that works on redpitaya-125-14 (only v1.0)
+There is a companion repository called [FPGA-Notes-for-Scientists](https://github.com/dspsandbox/FPGA-Notes-for-Scientists) that guides a beginner through the design of a series of basic designs that access all the fundamental capabilities of the board.
+
+### Adalm Pluto
+At the moment installing PYNQ on an ADALM Pluto is in consideration. It might not be however a good idea considering that the ADALM pluto has a quite robust echosystem designed by Analog Devices. So at the moment we are relying on such echosystem.
+The main page where to find resources for developing with ADALM pluto is:
+
+[Developers Wiki](https://wiki.analog.com/university/tools/pluto/developers)
+
+The wiki mentions two main repositories, M2k-fw and [PlutoSDR-fw](https://github.com/analogdevicesinc/plutosdr-fw) of the two only the second is relevant to ADALM Pluto while the other is for a different Analog Devices board.
+
+The HDL code is inside a submodule of PlutoSDR-fw, namely [hdl @ d09fc92](https://github.com/analogdevicesinc/hdl/tree/d09fc920792c2c67ce5f28179d8263172d46fbdd).
+
+Looking at what the makefile is doing the first thing that is done is to retiexe the xda file.
+For example for v3.5 [system_top.xsa tag=3.5](https://github.com/analogdevicesinc/plutosdr-fw/releases/download/v0.35/system_top.xsa)
+The xsa file is in reality a simple zip file that contains a series of assets to generate an embedded project. Among the assets there is a bit file that is loaded in the FPGA PL (programmable logic). Vitis documentation explains how to [create a XSA file](https://docs.xilinx.com/r/en-US/ug1400-vitis-embedded/Creating-a-Hardware-Design-XSA-File).
+
+The makefile is also capable to create the XSA file from scratch as shown in [this particular line of code](https://github.com/analogdevicesinc/plutosdr-fw/blob/714cd8aaeadfa30aecd6d8235d5076a3f7b8e5e3/Makefile#L136).
+
+Inspection of the code shows that supported targets are:
+
+[pluto](https://github.com/analogdevicesinc/hdl/tree/d09fc920792c2c67ce5f28179d8263172d46fbdd/projects/pluto) and [sidekiqz2](https://github.com/analogdevicesinc/hdl/tree/d09fc920792c2c67ce5f28179d8263172d46fbdd/projects/sidekiqz2) platforms.
+
+[Sidekiqz2](https://epiqsolutions.com/rf-transceiver/sidekiq-z2/) is an impressive product on its own merit... but let's focus on pluto.
+
+[pluto](https://github.com/analogdevicesinc/hdl/tree/d09fc920792c2c67ce5f28179d8263172d46fbdd/projects/pluto) hardware repository allows to build a project and see what is inside.
+
+
+
+ 
+
+
+
 ## Phase 1: Creating Vagrant virtual machine
 
 Exit from the folder of this project and run the following code:
@@ -48,7 +84,7 @@ Download the following files:
 
 [petalinux-v2020.1-final-installer.run](https://www.xilinx.com/member/forms/download/xef.html?filename=petalinux-v2020.1-final-installer.run)
 
-[vitis.cfg](https://raw.githubusercontent.com/restelli/PSoC-recipes/main/cfg/vitis.cfg?token=GHSAT0AAAAAABX6ZFYIUFCURHBW3R2XVK2SYZN7W5A)
+[vitis.cfg](cfg/vitis.cfg) (press the RAW download button to save the file)
 
 
 Place the downloaded files in the folder PYNQ:
