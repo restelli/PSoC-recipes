@@ -62,6 +62,10 @@ Inspection of the code shows that supported targets are:
 
 [pluto](https://github.com/analogdevicesinc/hdl/tree/d09fc920792c2c67ce5f28179d8263172d46fbdd/projects/pluto) hardware repository allows to build a project and see what is inside.
 
+[gnuradio](https://wiki.analog.com/resources/tools-software/linux-software/gnuradio) can also be installed.
+
+[py-sdr](https://pysdr.org/content/pluto.html)
+
 
 
  
